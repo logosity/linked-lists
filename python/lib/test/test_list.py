@@ -1,12 +1,116 @@
 import unittest
-
-from unittest.mock import ANY, Mock, PropertyMock, call
 from sure import expect, assertion
 
 import lib
-from lib.list import Node, Clone
+from lib.list import Node
 
-    #@unittest.skip("WIP")
+################################################################################
+class DeepCopyProblem(unittest.TestCase):
+#**** problem answer test cases ****
+
+    def setUp(self):
+
+        #create list
+        self.second = Node("Test2")
+        self.third = Node("Test3")
+        self.fourth = Node("Test4")
+        self.head = lib.list.create(Node("Test1"), self.second, self.third, self.fourth)
+
+        #set random links
+        self.head.link_any(self.fourth)
+        self.fourth.link_any(self.head)
+        self.second.link_any(self.second)
+        self.third.link_any(self.second)
+
+        #create deep copy
+        self.copy = self.head.copy()
+
+    def test_original_links_unchanged(self):
+        self.head.next.should.be(self.second)
+        self.second.next.should.be(self.third)
+        self.third.next.should.be(self.fourth)
+        self.fourth.next.should.be(None)
+
+    def test_original_random_refs_unchanged(self):
+        self.head.rand.should.be(self.fourth)
+        self.second.rand.should.be(self.second)
+        self.third.rand.should.be(self.second)
+        self.fourth.rand.should.be(self.head)
+
+    def test_copy_values_match_original_values(self):
+        self.copy.value.should.equal(self.head.value)
+        self.copy.next.value.should.equal(self.second.value)
+        self.copy.next.next.value.should.equal(self.third.value)
+        self.copy.next.next.next.value.should.equal(self.fourth.value)
+
+    def test_copy_nodes_different_objects_than_originals(self):
+        self.copy.value.should.equal(self.head.value)
+        self.copy.should.not_be(self.head)
+        self.copy.next.should.not_be(self.second)
+        self.copy.next.next.should.not_be(self.third)
+        self.copy.next.next.next.should.not_be(self.fourth)
+
+    def test_copy_random_refs_correspond_to_original(self):
+        self.copy.rand.should.be(self.copy.next.next.next)
+        self.copy.next.rand.should.be(self.copy.next)
+        self.copy.next.next.rand.should.be(self.copy.next)
+        self.copy.next.next.next.rand.should.be(self.copy)
+
+################################################################################
+
+class DeepCopyImplementation(unittest.TestCase):
+    def test_copying_nodes(self):
+        head = lib.list.create(Node("head"), Node("second"), Node("third"), Node("fourth"))
+
+        head._copy_nodes()
+
+        head.value.should.equal("head")
+        head.next.value.should.equal("head")
+        head.next.next.value.should.equal("second")
+        head.next.next.next.value.should.equal("second")
+        head.next.next.next.next.value.should.equal("third")
+        head.next.next.next.next.next.value.should.equal("third")
+        head.next.next.next.next.next.next.value.should.equal("fourth")
+        head.next.next.next.next.next.next.next.value.should.equal("fourth")
+        head.next.next.next.next.next.next.next.next.should.equal(None)
+
+    def test_copying_random_refs(self):
+        second = Node("second")
+        third = Node("third")
+        fourth = Node("fourth")
+        head = lib.list.create(Node("head"), second, third, fourth)
+
+        head.link_any(fourth)
+        fourth.link_any(head)
+        second.link_any(second)
+        third.link_any(second)
+
+        head._copy_nodes()
+        head._copy_rand_refs()
+
+        head.rand.should.be(fourth)
+        second.rand.should.be(second)
+        third.rand.should.be(second)
+        fourth.rand.should.be(head)
+
+        head.next.rand.should.be(fourth.next)
+        fourth.next.rand.should.be(head.next)
+        second.next.rand.should.be(second.next)
+        third.next.rand.should.be(second.next)
+
+    def test_unset_random_refs(self):
+        second = Node("second")
+        head = lib.list.create(Node("head"), second)
+
+        head.link_any(head)
+
+        head.rand.should.be(head)
+        head.next.rand.should.equal(None)
+
+        copy = head.copy()
+
+        copy.rand.should.be(copy)
+        copy.next.rand.should.equal(None)
 
 class CreatingNodes(unittest.TestCase):
     def setUp(self):
@@ -36,8 +140,8 @@ class CreatingNodes(unittest.TestCase):
     def test_random_refs(self):
         head = Node("head")
         second = Node("second")
-        head.rand = head
-        second.rand = head
+        head.link_any(head)
+        second.link_any(head)
 
         head.rand.should.be(head)
         second.rand.should.be(head)
@@ -56,103 +160,4 @@ class CreatingNodes(unittest.TestCase):
         head.value.should.equal("head")
         head.next.value.should.equal("second")
         head.next.next.should.equal(None)
-
-class CloningListTest(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def test_copying_nodes(self):
-        head = lib.list.create(Node("head"), Node("second"), Node("third"), Node("fourth"))
-
-        algo = Clone()
-        algo._copy_nodes(head)
-
-        head.value.should.equal("head")
-        head.next.value.should.equal("head")
-        head.next.next.value.should.equal("second")
-        head.next.next.next.value.should.equal("second")
-        head.next.next.next.next.value.should.equal("third")
-        head.next.next.next.next.next.value.should.equal("third")
-        head.next.next.next.next.next.next.value.should.equal("fourth")
-        head.next.next.next.next.next.next.next.value.should.equal("fourth")
-        head.next.next.next.next.next.next.next.next.should.equal(None)
-
-    @unittest.skip("WIP")
-    def test_copying_random_refs(self):
-        second = Node("second")
-        third = Node("third")
-        fourth = Node("fourth")
-        head = lib.list.create(Node("head"), second, third, fourth)
-
-        head.rand = fourth
-        fourth.rand = head
-        second.rand = second
-        third.rand = second
-
-        algo = Clone()
-        algo._copy_nodes(head)
-        algo._copy_rand_refs(head)
-
-        head.rand.should.be(fourth)
-        fourth.rand.should.be(head)
-        second.rand.should.be(second)
-        third.rand.should.be(second)
-
-        head.next.rand.should.be(fourth.next)
-        fourth.next.rand.should.be(head.next)
-        second.next.rand.should.be(second.next)
-        third.next.rand.should.be(second.next)
-
-#    def setUp(self):
-#        self.head = Node("Test1")
-#        self.second = Node("Test2")
-#        self.third = Node("Test3")
-#        self.fourth = Node("Test4")
-#
-#        self.head.next = self.second
-#        self.second.next = self.third
-#        self.third.next = self.fourth
-#
-#    def test_values(self):
-#        result = self.head.clone()
-#
-#        result.value.should.equal("Test1")
-#        result.next.value.should.equal("Test2")
-#        result.next.next.value.should.equal("Test3")
-#        result.next.next.next.value.should.equal("Test4")
-#
-#    def test_identities(self):
-#        result = self.head.clone()
-#
-#        result.should.not_be(self.head)
-#        result.next.should.not_be(self.second)
-#        result.next.next.should.not_be(self.third)
-#        result.next.next.next.should.not_be(self.fourth)
-#
-#        result.next.next.next.next.should.equal(None)
-
-#class RandomRefs(CloningMultiElements):
-#    def setUp(self):
-#
-#        super().setUp()
-#
-#        self.head.rand = self.fourth
-#        self.fourth.rand = self.head
-#        self.second.rand = self.second
-#        self.third.rand = self.second
-#
-#        self.result = self.head.clone()
-#        self.new_head = self.result
-#        self.new_second = self.result.next
-#        self.new_third = self.result.next.next
-#        self.new_fourth = self.result.next.next.next
-#
-#    @unittest.skip("WIP")
-#    def test_random_identities(self):
-#        self.new_head.rand.should.be(self.new_fourth)
-#        self.new_fourth.rand.should.be(self.new_head)
-#        self.new_second.rand.should.be(self.new_second)
-#        self.new_third.rand.should.be(self.new_second)
-#
-
 
