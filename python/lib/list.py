@@ -5,17 +5,17 @@
 from collections.abc import Sequence
 
 class List(Sequence):
-    def __init__(self, *links):
+    def __init__(self, *values):
         self._head = None
 
-        if len(links) == 0:
+        if len(values) == 0:
             return
 
-        if len(links) == 1 and isinstance(links[0], Link):
-            self._head = links[0]
+        if len(values) == 1 and isinstance(values[0], Link):
+            self._head = values[0]
             return
 
-        for n in reversed(links):
+        for n in reversed(values):
             link = Link(n)
             link.next = self._head
             self._head = link
