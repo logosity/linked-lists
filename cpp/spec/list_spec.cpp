@@ -1,8 +1,11 @@
+#include <cstring>
+
 #include "catch.hpp"
 #include "list.h"
 
-TEST_CASE("Foo", "[foo]") {
-  REQUIRE(foo(0) == 42);
+TEST_CASE("Creating Links", "[Link]") {
+  Link link = Link{"link", nullptr, nullptr};
+  REQUIRE(strcmp(link.value, "link") == 0);
 }
 
 
