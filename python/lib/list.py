@@ -1,76 +1,109 @@
-def create(*nodes):
-    result = None
-    for n in reversed(nodes):
-        n.link(result)
-        result = n
-
-    return result
-
-class Node:
-    def __init__(self, value):
-        self._value = value
-        self._next = None
-        self._rand = None
-
 ################################################################################
 # Deep Copy in time O(n), space O(1). Used the following link for reference:
 # https://www.tutorialcup.com/linked-list/clone-linked-list-next-random-pointer.htm
-    def copy(self):
-        self._copy_nodes()
-        self._copy_rand_refs()
+################################################################################
+from collections.abc import Sequence
 
-        current = self
-        copy = self.next
+class List(Sequence):
+    def __init__(self, *links):
+        self._head = None
+
+        if len(links) == 0:
+            return
+
+        if len(links) == 1 and isinstance(links[0], Link):
+            self._head = links[0]
+            return
+
+        for n in reversed(links):
+            link = Link(n)
+            link.next = self._head
+            self._head = link
+
+    def __getitem__(self, i):
+        if not self.head:
+            raise IndexError("list index out of range")
+
+        link = self.head
+        for x in range(i):
+            if not link.next:
+                raise IndexError
+            link = link.next
+
+        return link
+
+        while link is not None:
+            result += 1
+            link = self.head.next
+
+
+    def __len__(self, i):
+        result = 0
+        link = self.head
+        while link is not None:
+            result += 1
+            link = self.head.next
+
+    @property
+    def head(self):
+        return self._head
+
+    def copy(self):
+        self._copy_links()
+        self._copy_refs()
+
+        current = self.head
+        copy = self.head.next
         while current is not None:
             current_copy = current.next
-            current.link(current.next.next)
+            current.next = current.next.next
 
             if current_copy.next:
-                current_copy.link(current_copy.next.next)
+                current_copy.next = current_copy.next.next
 
             current = current.next
 
-        return copy
+        return List(copy)
 
-    def _copy_nodes(self):
-        current = self
+    def _copy_links(self):
+        current = self.head
         while current is not None:
-            new = Node(current.value)
-            new.link(current.next)
-            current.link(new)
+            new = Link(current.value)
+            new.next = current.next
+            current.next = new
             current = new.next
 
-    def _copy_rand_refs(self):
-        current = self
+    def _copy_refs(self):
+        current = self.head
         while current is not None:
-            if current.rand:
-                current.next.link_any(current.rand.next)
+            if current.ref:
+                current.next.ref = current.ref.next
 
             current = current.next.next
 
-################################################################################
-
-    @property
-    def next(self):
-        return self._next
-
-    @property
-    def rand(self):
-        return self._rand
+class Link:
+    def __init__(self, value):
+        self._value = value
+        self._next = None
+        self._ref = None
 
     @property
     def value(self):
         return self._value
 
-    def link(self, next_node):
-        self._next = next_node
+    @property
+    def next(self):
         return self._next
 
-    def link_any(self, random_node):
-        self._rand = random_node
-        return self._rand
+    @next.setter
+    def next(self, link):
+        self._next = link
 
-    @value.setter
-    def value(self, value):
-        self._value = value
+    @property
+    def ref(self):
+        return self._ref
+
+    @ref.setter
+    def ref(self, link):
+        self._ref = link
 

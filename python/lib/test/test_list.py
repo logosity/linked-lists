@@ -2,162 +2,133 @@ import unittest
 from sure import expect, assertion
 
 import lib
-from lib.list import Node
+from lib.list import List, Link
 
 ################################################################################
 class DeepCopyProblem(unittest.TestCase):
 #**** problem answer test cases ****
 
     def setUp(self):
+        self.list = List("Test1", "Test2", "Test3", "Test4")
 
-        #create list
-        self.second = Node("Test2")
-        self.third = Node("Test3")
-        self.fourth = Node("Test4")
-        self.head = lib.list.create(Node("Test1"), self.second, self.third, self.fourth)
+        #set arbitrary links
+        self.list[0].ref = self.list[3]
+        self.list[1].ref = self.list[1]
+        self.list[2].ref = self.list[1]
+        self.list[3].ref = self.list[0]
 
-        #set random links
-        self.head.link_any(self.fourth)
-        self.fourth.link_any(self.head)
-        self.second.link_any(self.second)
-        self.third.link_any(self.second)
-
-        #create deep copy
-        self.copy = self.head.copy()
+        self.copy = self.list.copy()
 
     def test_original_links_unchanged(self):
-        self.head.next.should.be(self.second)
-        self.second.next.should.be(self.third)
-        self.third.next.should.be(self.fourth)
-        self.fourth.next.should.be(None)
+        self.list[0].next.should.be(self.list[1])
+        self.list[1].next.should.be(self.list[2])
+        self.list[2].next.should.be(self.list[3])
+        self.list[3].next.should.be(None)
 
-    def test_original_random_refs_unchanged(self):
-        self.head.rand.should.be(self.fourth)
-        self.second.rand.should.be(self.second)
-        self.third.rand.should.be(self.second)
-        self.fourth.rand.should.be(self.head)
+    def test_original_refs_unchanged(self):
+        self.list[0].ref.should.be(self.list[3])
+        self.list[1].ref.should.be(self.list[1])
+        self.list[2].ref.should.be(self.list[1])
+        self.list[3].ref.should.be(self.list[0])
 
     def test_copy_values_match_original_values(self):
-        self.copy.value.should.equal(self.head.value)
-        self.copy.next.value.should.equal(self.second.value)
-        self.copy.next.next.value.should.equal(self.third.value)
-        self.copy.next.next.next.value.should.equal(self.fourth.value)
+        self.copy[0].value.should.equal(self.list[0].value)
+        self.copy[1].value.should.equal(self.list[1].value)
+        self.copy[2].value.should.equal(self.list[2].value)
+        self.copy[3].value.should.equal(self.list[3].value)
 
-    def test_copy_nodes_different_objects_than_originals(self):
-        self.copy.value.should.equal(self.head.value)
-        self.copy.should.not_be(self.head)
-        self.copy.next.should.not_be(self.second)
-        self.copy.next.next.should.not_be(self.third)
-        self.copy.next.next.next.should.not_be(self.fourth)
+    def test_copy_links_different_objects_than_originals(self):
+        self.copy[0].value.should.equal(self.list[0].value)
+        self.copy[0].should.not_be(self.list[0])
+        self.copy[1].should.not_be(self.list[1])
+        self.copy[2].should.not_be(self.list[2])
+        self.copy[3].should.not_be(self.list[3])
 
-    def test_copy_random_refs_correspond_to_original(self):
-        self.copy.rand.should.be(self.copy.next.next.next)
-        self.copy.next.rand.should.be(self.copy.next)
-        self.copy.next.next.rand.should.be(self.copy.next)
-        self.copy.next.next.next.rand.should.be(self.copy)
+    def test_copy_refs_correspond_to_original(self):
+        self.copy[0].ref.should.be(self.copy[3])
+        self.copy[1].ref.should.be(self.copy[1])
+        self.copy[2].ref.should.be(self.copy[1])
+        self.copy[3].ref.should.be(self.copy[0])
 
 ################################################################################
 
 class DeepCopyImplementation(unittest.TestCase):
-    def test_copying_nodes(self):
-        head = lib.list.create(Node("head"), Node("second"), Node("third"), Node("fourth"))
-
-        head._copy_nodes()
-
-        head.value.should.equal("head")
-        head.next.value.should.equal("head")
-        head.next.next.value.should.equal("second")
-        head.next.next.next.value.should.equal("second")
-        head.next.next.next.next.value.should.equal("third")
-        head.next.next.next.next.next.value.should.equal("third")
-        head.next.next.next.next.next.next.value.should.equal("fourth")
-        head.next.next.next.next.next.next.next.value.should.equal("fourth")
-        head.next.next.next.next.next.next.next.next.should.equal(None)
-
-    def test_copying_random_refs(self):
-        second = Node("second")
-        third = Node("third")
-        fourth = Node("fourth")
-        head = lib.list.create(Node("head"), second, third, fourth)
-
-        head.link_any(fourth)
-        fourth.link_any(head)
-        second.link_any(second)
-        third.link_any(second)
-
-        head._copy_nodes()
-        head._copy_rand_refs()
-
-        head.rand.should.be(fourth)
-        second.rand.should.be(second)
-        third.rand.should.be(second)
-        fourth.rand.should.be(head)
-
-        head.next.rand.should.be(fourth.next)
-        fourth.next.rand.should.be(head.next)
-        second.next.rand.should.be(second.next)
-        third.next.rand.should.be(second.next)
-
-    def test_unset_random_refs(self):
-        second = Node("second")
-        head = lib.list.create(Node("head"), second)
-
-        head.link_any(head)
-
-        head.rand.should.be(head)
-        head.next.rand.should.equal(None)
-
-        copy = head.copy()
-
-        copy.rand.should.be(copy)
-        copy.next.rand.should.equal(None)
-
-class CreatingNodes(unittest.TestCase):
     def setUp(self):
-        self.node = Node("Hello")
+        self.list = List("first", "second", "third", "fourth")
 
-    def test_single_node_value(self):
-        self.node.value.should.equal("Hello")
+    def test_copying_links(self):
+        self.list._copy_links()
+
+        self.list[0].value.should.equal("first")
+        self.list[1].value.should.equal("first")
+        self.list[2].value.should.equal("second")
+        self.list[3].value.should.equal("second")
+        self.list[4].value.should.equal("third")
+        self.list[5].value.should.equal("third")
+        self.list[6].value.should.equal("fourth")
+        self.list[7].value.should.equal("fourth")
+        self.list[7].next.should.equal(None)
+
+    def test_copying_refs(self):
+        self.list[0].ref = self.list[3]
+        self.list[1].ref = self.list[1]
+        self.list[2].ref = self.list[1]
+        self.list[3].ref = self.list[0]
+
+        self.list._copy_links()
+        self.list._copy_refs()
+
+        self.list[0].ref.should.be(self.list[6])
+        self.list[2].ref.should.be(self.list[2])
+        self.list[4].ref.should.be(self.list[2])
+        self.list[6].ref.should.be(self.list[0])
+
+        self.list[1].ref.should.be(self.list[7])
+        self.list[3].ref.should.be(self.list[3])
+        self.list[5].ref.should.be(self.list[3])
+        self.list[7].ref.should.be(self.list[1])
+
+    def test_unset_refs(self):
+        self.list = List("first", "second")
+
+        self.list[0].ref = self.list[0]
+
+        self.list[0].ref.should.be(self.list[0])
+        self.list[0].next.ref.should.equal(None)
+
+        copy = self.list.copy()
+
+        copy[0].ref.should.be(copy[0])
+        copy[0].next.ref.should.equal(None)
+
+class CreatingLists(unittest.TestCase):
+    def test_creating_empty_lists(self):
+        List().head.should.equal(None)
+
+    def test_out_of_bounds(self):
+        List().__getitem__.when.called_with(0).should.throw(IndexError, "list index out of range")
+        List("first").__getitem__.when.called_with(1).should.throw(IndexError)
+
+    def test_creating_single_link_lists(self):
+        List("head")[0].value.should.equal("head")
+        List("head")[0].next.should.equal(None)
+        List("head")[0].ref.should.equal(None)
+
+    def test_creating_multi_link_lists(self):
+        List("head", "second")[0].value.should.equal("head")
+        List("head", "second")[1].value.should.equal("second")
+        List("head", "second")[1].next.should.equal(None)
+
+class CreatingLinks(unittest.TestCase):
+    def setUp(self):
+        self.link = Link("Hello")
+
+    def test_single_link_value(self):
+        self.link.value.should.equal("Hello")
 
     def test_default_next(self):
-        self.node.next.should.equal(None)
+        self.link.next.should.equal(None)
 
-    def test_linking(self):
-        n = Node("next")
-        self.node.link(n).should.be(n)
-        self.node.next.should.be(n)
-
-    def test_chaining_links(self):
-        head = Node("head")
-        head.link(Node("second")).link(Node("third")).link(Node("fourth"))
-
-        head.value.should.equal("head")
-        head.next.value.should.equal("second")
-        head.next.next.value.should.equal("third")
-        head.next.next.next.value.should.equal("fourth")
-        head.next.next.next.next.should.equal(None)
-
-    def test_random_refs(self):
-        head = Node("head")
-        second = Node("second")
-        head.link_any(head)
-        second.link_any(head)
-
-        head.rand.should.be(head)
-        second.rand.should.be(head)
-
-    def test_creating_empty_lists(self):
-        lib.list.create().should.equal(None)
-
-    def test_creating_single_node_lists(self):
-        head = lib.list.create(Node("head"))
-        head.value.should.equal("head")
-        head.next.should.equal(None)
-        head.rand.should.equal(None)
-
-    def test_creating_multi_node_lists(self):
-        head = lib.list.create(Node("head"), Node("second"))
-        head.value.should.equal("head")
-        head.next.value.should.equal("second")
-        head.next.next.should.equal(None)
+    def test_default_ref(self):
+        self.link.ref.should.equal(None)
 
