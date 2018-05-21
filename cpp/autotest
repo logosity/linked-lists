@@ -1,3 +1,0 @@
-#!/bin/bash
-
-find src spec include \( -name '*.h' -o -name '*.*pp' \) -print | entr -c bash -c 'pushd build > /dev/null; make spec && ./spec; popd > /dev/null'

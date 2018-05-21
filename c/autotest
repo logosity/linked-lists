@@ -1,0 +1,2 @@
+#!/bin/bash
+find src spec include \( -name '*.h' -o -name '*.c' -o -name '*.*pp' \) -print | entr -c bash -c 'pushd build > /dev/null; make spec && valgrind -q --leak-check=yes --num-callers=3 ./spec; popd > /dev/null'
