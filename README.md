@@ -1,18 +1,18 @@
-# Problem Solutiion
+# Problem Solution
 This project contains two solutions to the problem statement (copied into `./problem.txt` from the email) on in Python and one in C. Both implement the same algorithm described as "Method 2" on this page:
 https://www.tutorialcup.com/linked-list/clone-linked-list-next-random-pointer.htm
 
-The algorithm copies a doubly-linked list in time O(n) and constant space.
+The algorithm copies a linked list with random ref links in time O(n) and constant space.
 
 ## Python
-The python version (in the `./python` directory), takes an Object-Oriented approach, including the implementation of "iterable" (i.e. `__getitem__` and `__len__`) for ease of reading the tests and iteration. The tests are written in unittest using the 'sure' library for matcher syntactic-sugar.
+The python version (in the `./python` directory), takes an Object-Oriented approach, including the implementation of the "Sequence" interface (i.e. `__getitem__` and `__len__`) for ease of reading the tests and iteration. The tests are written using the `unittest` and the  `sure` library which adds some "matcher" syntactic-sugar.
 
 ### Install Requirements
 
 * Python 3.6
-* pipenv
-* GNU make (probably any make will do)
-* entr (just for the autotesting command)
+* `pipenv`
+* GNU `make` (probably any make will do)
+* `entr` (just for the autotesting command)
 
 ### Installation
 
@@ -29,9 +29,9 @@ The C version (in the `./c` directory), is based on two simple structs and some 
 
 ### Install Requirements
 
-* cmake > 3.5.1 
-* valgrind
-* entr (just for the autotest script)
+* `cmake` > 3.5.1 
+* `valgrind`
+* `entr` (just for the `autotest` script)
 
 ### Installation
 unpack and run `cmake ..` in the `./c/build` directory.
