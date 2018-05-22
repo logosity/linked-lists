@@ -10,10 +10,8 @@ typedef struct List {
   Link* head;
 } List;
 
-int add_link(List* list, const char* value);
+Link* list_add_link(List* list, const char* value);
+void list_set_ref(Link* from, Link* to);
+void list_free(List* list);
+int list_copy(List* from, List* to);
 
-void set_ref(Link* from, Link* to);
-
-int copy_list(List* from, List* to);
-
-void free_list(List* list);

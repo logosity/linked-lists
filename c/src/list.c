@@ -3,86 +3,24 @@
 #include <string.h>
 #include "list.h"
 
-int copy_list(List* from, List* to) {
-  Link* current = from->head;
-  while(current) {
-    int result = add_link(to, current->value);
-    if(result != 0) {
-      return result;
-    }
-      
-    current = current->next;
-  }
+/*********************************************************************************/
+/*** internal function declarations ***/
+/*********************************************************************************/
+Link* create_link(Link**, const char*);
+Link** find_end(List*);
 
-  return 0;
-}
-//
-//    def copy(self):
-//        self._copy_links()
-//        self._copy_refs()
-//
-//        current = self.head
-//        copy = self.head.next
-//        while current is not None:
-//            current_copy = current.next
-//            current.next = current.next.next
-//
-//            if current_copy.next:
-//                current_copy.next = current_copy.next.next
-//
-//            current = current.next
-//
-//        return List(copy)
-//
-//    def _copy_links(self):
-//        current = self.head
-//        while current is not None:
-//            new = Link(current.value)
-//            new.next = current.next
-//            current.next = new
-//            current = new.next
-//
-//    def _copy_refs(self):
-//        current = self.head
-//        while current is not None:
-//            if current.ref:
-//                current.next.ref = current.ref.next
-//
-//            current = current.next.next
-
-int add_link(List* list, const char* value) {
-  Link* link = (Link*) malloc(sizeof(Link));
-  if(link == NULL) {
-    fprintf(stderr, "Unable to allocate memory for link.\n");
-    return -1;
-  }
-
-  link->value = malloc(strlen(value) + 1);
-  if(link->value == NULL) {
-    fprintf(stderr, "Unable to allocate memory for vallue.\n");
-    free(link);
-    link == NULL;
-    return -2;
-  }
-
-  strcpy(link->value, value);
-  link->next = NULL;
-  link->ref = NULL;
-
-  if(!list->head) {
-    list->head = link;
-
-  } else {
-    Link* end = list->head;
-    while(end->next != NULL) {
-      end = end->next;
-    }
-    end->next = link;
-  }
-  return 0;
+/*********************************************************************************/
+/*** public functions ***/
+/*********************************************************************************/
+Link* list_add_link(List* list, const char* value) {
+  return create_link(find_end(list), value);
 }
 
-void free_list(List* list) {
+void list_set_ref(Link* from, Link* to) {
+  from->ref = to;
+}
+
+void list_free(List* list) {
   Link* tmp;
   while (list->head != NULL) {
     tmp = list->head;
@@ -93,6 +31,81 @@ void free_list(List* list) {
   }
 }
 
-void set_ref(Link* from, Link* to) {
-  from->ref = to;
+/********************************************************************************
+* Deep Copy in time O(n), space O(1). Used the following link for reference:
+* https://www.tutorialcup.com/linked-list/clone-linked-list-next-random-pointer.htm
+********************************************************************************/
+int list_copy(List* from, List* to) {
+  //create new copies of each link and interleave them in the 'from' list
+  Link* current = from->head;
+  while(current) {
+    Link* new;
+    create_link(&new, current->value);
+    if(new == NULL) {
+      fprintf(stderr, "Unable to copy list.\n");
+      return -1;
+    }
+
+    new->next = current->next;
+    current->next = new;
+    current = new->next;
+  }
+
+  //copy refs
+  current = from->head;
+  while(current) {
+    if(current->ref) {
+      current->next->ref = current->ref->next;
+    }
+    current = current->next->next;
+  }
+
+  //finalize lists
+  current = from->head;
+  to->head = from->head->next;
+  while(current) {
+    Link* copy = current->next;
+    current->next = current->next->next;
+    if(copy->next) {
+      copy->next = copy->next->next;
+    }
+    current = current->next;
+  }
+
+  return 0;
 }
+
+/*********************************************************************************/
+/*** internal function definitions ***/
+/*********************************************************************************/
+Link* create_link(Link** dst, const char* value) {
+  *dst = (Link*) malloc(sizeof(Link));
+  Link* buffer = *dst;
+  if(buffer == NULL) {
+    fprintf(stderr, "Unable to allocate memory for link.\n");
+    return NULL;
+  }
+  buffer->next = NULL;
+  buffer->ref = NULL;
+
+  buffer->value = malloc(strlen(value) + 1);
+  if(buffer->value == NULL) {
+    fprintf(stderr, "Unable to allocate memory for vallue.\n");
+    free(buffer);
+    buffer == NULL;
+    return NULL;
+  }
+
+  strcpy(buffer->value, value);
+
+  return buffer;
+}
+
+Link** find_end(List* list) {
+  Link** result = &list->head;
+  while(*result != NULL) {
+    result = &((*result)->next);
+  }
+  return result;
+}
+

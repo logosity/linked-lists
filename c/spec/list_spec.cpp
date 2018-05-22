@@ -6,7 +6,7 @@ extern "C" {
 #include "list.h"
 }
 
-SCENARIO("Creating a Link") {
+SCENARIO("Creating a Link (Sanity Check)") {
   GIVEN("A properly initialized link") {
     char link_value[] = "link";
     Link link = Link{link_value, NULL, NULL};
@@ -24,7 +24,9 @@ SCENARIO("Lists can be created and cleaned up") {
     List list = List{};
 
     WHEN("a link is added") {
-      REQUIRE(add_link(&list, "head") == 0);
+      Link* link = list_add_link(&list, "head");
+      REQUIRE(link != NULL);
+      REQUIRE(link == list.head);
 
       THEN("the value is set, the pointers are NULL and value is mutable") {
         REQUIRE(strcmp(list.head->value, "head") == 0);
@@ -35,7 +37,7 @@ SCENARIO("Lists can be created and cleaned up") {
         REQUIRE(strcmp(list.head->value, "heed") == 0);
       }
 
-      free_list(&list);
+      list_free(&list);
 
       THEN("the head is NULL") {
         REQUIRE(list.head == NULL);
@@ -48,36 +50,43 @@ SCENARIO("Lists can be created and cleaned up") {
     List list = List{};
 
     WHEN("links are added") {
-      add_link(&list, "head");
-      add_link(&list, "second");
-      add_link(&list, "third");
+      list_add_link(&list, "head");
+      list_add_link(&list, "second");
+      Link* third = list_add_link(&list, "third");
+
+      REQUIRE(third == list.head->next->next);
+      REQUIRE(NULL == list.head->next->next->next);
 
       THEN("the links are added sequentially") {
         REQUIRE(strcmp(list.head->value, "head") == 0);
         REQUIRE(strcmp(list.head->next->value, "second") == 0);
         REQUIRE(strcmp(list.head->next->next->value, "third") == 0);
       }
-      free_list(&list);
+      list_free(&list);
     }
   }
   GIVEN("A multi element List") {
     List list = List{};
+    list_add_link(&list, "head");
+    list_add_link(&list, "second");
+    list_add_link(&list, "third");
 
     WHEN("refs are added") {
-      add_link(&list, "head");
-      add_link(&list, "second");
-      add_link(&list, "third");
+      list_set_ref(list.head, list.head->next->next);
+      list_set_ref(list.head->next, list.head->next);
+      list_set_ref(list.head->next->next, list.head);
 
-      set_ref(list.head, list.head->next->next);
-      set_ref(list.head->next, list.head->next);
-      set_ref(list.head->next->next, list.head);
-
-      THEN("refs can point anywhere") {
+      THEN("refs can point anywhere and do not affect link order") {
         REQUIRE(strcmp(list.head->ref->value, "third") == 0);
         REQUIRE(strcmp(list.head->next->ref->value, "second") == 0);
         REQUIRE(strcmp(list.head->next->next->ref->value, "head") == 0);
+
+        REQUIRE(strcmp(list.head->value, "head") == 0);
+        REQUIRE(strcmp(list.head->next->value, "second") == 0);
+        REQUIRE(strcmp(list.head->next->next->value, "third") == 0);
+        REQUIRE(list.head->next->next->next == NULL);
       }
-      free_list(&list);
+      list_free(&list);
     }
   }
 }
@@ -94,15 +103,15 @@ SCENARIO("Problem Answer Test Cases") {
 
     List list = List{};
 
-    add_link(&list, "Test1");
-    add_link(&list, "Test2");
-    add_link(&list, "Test3");
-    add_link(&list, "Test4");
+    list_add_link(&list, "Test1");
+    list_add_link(&list, "Test2");
+    list_add_link(&list, "Test3");
+    list_add_link(&list, "Test4");
 
-    set_ref(list.head, list.head->next->next->next);
-    set_ref(list.head->next, list.head->next);
-    set_ref(list.head->next->next, list.head->next);
-    set_ref(list.head->next->next->next, list.head);
+    list_set_ref(list.head, list.head->next->next->next);
+    list_set_ref(list.head->next, list.head->next);
+    list_set_ref(list.head->next->next, list.head->next);
+    list_set_ref(list.head->next->next->next, list.head);
 
     test_links originals = {
       list.head,
@@ -112,8 +121,8 @@ SCENARIO("Problem Answer Test Cases") {
     };
 
     WHEN("list is copied") {
-      List copy = List{};
-      copy_list(&list, &copy);
+      List copy = {};
+      list_copy(&list, &copy);
       THEN("original values are unchanged") {
         REQUIRE(list.head->value == originals.head->value);
         REQUIRE(list.head->next->value == originals.second->value);
@@ -126,6 +135,7 @@ SCENARIO("Problem Answer Test Cases") {
         REQUIRE(list.head->next == originals.second);
         REQUIRE(list.head->next->next == originals.third);
         REQUIRE(list.head->next->next->next == originals.fourth);
+        REQUIRE(list.head->next->next->next->next == NULL);
       }
 
       THEN("original refs are unchanged") {
@@ -153,64 +163,45 @@ SCENARIO("Problem Answer Test Cases") {
         REQUIRE(copy.head->next != originals.second);
         REQUIRE(copy.head->next->next != originals.third);
         REQUIRE(copy.head->next->next->next != originals.fourth);
+        REQUIRE(copy.head->next->next->next->next == NULL);
       }
-//      THEN("copy refs correspond to originals") {
-//        REQUIRE(copy.head->ref == copy.head->next->next->next);
-//        REQUIRE(copy.head->next->ref == copy.head->next);
-//        REQUIRE(copy.head->next->next->ref == copy.head->next);
-//        REQUIRE(copy.head->next->next->next->ref == copy.head);
-//      }
 
-      free_list(&copy);
+      THEN("copy refs correspond to originals") {
+        REQUIRE(copy.head->ref == copy.head->next->next->next);
+        REQUIRE(copy.head->next->ref == copy.head->next);
+        REQUIRE(copy.head->next->next->ref == copy.head->next);
+        REQUIRE(copy.head->next->next->next->ref == copy.head);
+      }
+
+      list_free(&copy);
 
     }
 
-    free_list(&list);
+    list_free(&list);
   }
 }
-/*
-class DeepCopyProblem(unittest.TestCase):
-#**** problem answer test cases ****
 
-    def setUp(self):
-        self.list = List("Test1", "Test2", "Test3", "Test4")
+SCENARIO("Refs are optional") {
+  GIVEN("A multi element List") {
+    List list = List{};
+    list_add_link(&list, "first");
+    list_add_link(&list, "second");
 
-        #set arbitrary links
-        self.list[0].ref = self.list[3]
-        self.list[1].ref = self.list[1]
-        self.list[2].ref = self.list[1]
-        self.list[3].ref = self.list[0]
+    WHEN("one ref is added and list is copied") {
+      list_set_ref(list.head, list.head);
+      REQUIRE(list.head->ref == list.head);
+      REQUIRE(list.head->next->ref == NULL);
 
-        self.copy = self.list.copy()
+      List copy = {};
+      list_copy(&list, &copy);
 
-    def test_original_links_unchanged(self):
-        self.list[0].next.should.be(self.list[1])
-        self.list[1].next.should.be(self.list[2])
-        self.list[2].next.should.be(self.list[3])
-        self.list[3].next.should.be(None)
+      THEN("copy refs still refer to originals") {
+        REQUIRE(copy.head->ref == copy.head);
+        REQUIRE(copy.head->next->ref == NULL);
+      }
 
-    def test_original_refs_unchanged(self):
-        self.list[0].ref.should.be(self.list[3])
-        self.list[1].ref.should.be(self.list[1])
-        self.list[2].ref.should.be(self.list[1])
-        self.list[3].ref.should.be(self.list[0])
-
-    def test_copy_values_match_original_values(self):
-        self.copy[0].value.should.equal(self.list[0].value)
-        self.copy[1].value.should.equal(self.list[1].value)
-        self.copy[2].value.should.equal(self.list[2].value)
-        self.copy[3].value.should.equal(self.list[3].value)
-
-    def test_copy_links_different_objects_than_originals(self):
-        self.copy[0].value.should.equal(self.list[0].value)
-        self.copy[0].should.not_be(self.list[0])
-        self.copy[1].should.not_be(self.list[1])
-        self.copy[2].should.not_be(self.list[2])
-        self.copy[3].should.not_be(self.list[3])
-
-    def test_copy_refs_correspond_to_original(self):
-        self.copy[0].ref.should.be(self.copy[3])
-        self.copy[1].ref.should.be(self.copy[1])
-        self.copy[2].ref.should.be(self.copy[1])
-        self.copy[3].ref.should.be(self.copy[0])
- */
+      list_free(&list);
+      list_free(&copy);
+    }
+  }
+}
