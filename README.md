@@ -15,6 +15,18 @@ The python version (in the `./python` directory), takes an Object-Oriented appro
 * `entr` (just for the autotesting command)
 
 ### Installation
+(I'm running Ubuntu 16.04 on my workstation)
+
+I tested this on a clean EC2 instance (micro) running ubuntu 16.04, so I had to jump through some hoops on a clean box to get python3.6 working. On my workstation I use pyenv, but here's what I did on the test box. I also expect that the solution would work with python 3.5 (and possibly even 2.7) but I didn't try that:
+
+* sudo add-apt-repository ppa:deadsnakes/ppa
+* sudo apt-get update
+* sudo apt-get install entr #optional
+* sudo apt-get install python3.6
+* sudo apt install python3-venv python3-pip
+* python3.6 -m pip install --user pipenv
+* pipenv install --dev
+
 
 ### Running tests
 
@@ -34,7 +46,13 @@ The C version (in the `./c` directory), is based on two simple structs and some 
 * `entr` (just for the `autotest` script)
 
 ### Installation
-unpack and run `cmake ..` in the `./c/build` directory.
+(again on clean ubuntu 16.04 box)
+
+* sudo apt-get install cmake
+* sudo apt-get install valgrind
+* sudo apt-get install entr #optional
+* `mkdir ./c/build
+* `cd ./c/build && cmake ..`
 
 ### Running Tests
 
