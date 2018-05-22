@@ -1,12 +1,20 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "list.h"
 
-void copy_list(List* from, List* to) {
+int copy_list(List* from, List* to) {
   Link* current = from->head;
   while(current) {
-    add_link(to, current->value);
+    int result = add_link(to, current->value);
+    if(result != 0) {
+      return result;
+    }
+      
     current = current->next;
   }
+
+  return 0;
 }
 //
 //    def copy(self):
@@ -42,14 +50,28 @@ void copy_list(List* from, List* to) {
 //
 //            current = current.next.next
 
-void add_link(List* list, char* value) {
+int add_link(List* list, const char* value) {
   Link* link = (Link*) malloc(sizeof(Link));
-  link->value = value;
+  if(link == NULL) {
+    fprintf(stderr, "Unable to allocate memory for link.\n");
+    return -1;
+  }
+
+  link->value = malloc(strlen(value) + 1);
+  if(link->value == NULL) {
+    fprintf(stderr, "Unable to allocate memory for vallue.\n");
+    free(link);
+    link == NULL;
+    return -2;
+  }
+
+  strcpy(link->value, value);
   link->next = NULL;
   link->ref = NULL;
 
   if(!list->head) {
     list->head = link;
+
   } else {
     Link* end = list->head;
     while(end->next != NULL) {
@@ -57,6 +79,7 @@ void add_link(List* list, char* value) {
     }
     end->next = link;
   }
+  return 0;
 }
 
 void free_list(List* list) {
@@ -64,6 +87,7 @@ void free_list(List* list) {
   while (list->head != NULL) {
     tmp = list->head;
     list->head = list->head->next;
+    free(tmp->value);
     tmp->next = NULL;
     free(tmp);
   }
