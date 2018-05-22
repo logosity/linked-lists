@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.5.1)
+
 project(DeepCopyOptimization)
+
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -g -O0")
 
+include_directories(include)
+
 set(C_SOURCES_SPEC "src/list.c" )
 file(GLOB SPECS "spec/*.cpp")
 set(C_SOURCES ${C_SOURCES_SPEC} "src/main.c")
-include_directories(include)
-message("spec sources: ${C_SOURCES_SPEC}")
-message("c sources: ${C_SOURCES}")
-message("spec sources: ${SPECS}")
+
 add_executable(main ${C_SOURCES})
 add_executable(spec ${SPECS} ${C_SOURCES_SPEC})
