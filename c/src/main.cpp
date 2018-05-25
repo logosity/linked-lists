@@ -1,11 +1,20 @@
-#include <stdio.h>
-#include "list.h"
+#include <cstdio>
+#include <cstdlib>
 
-void print_list(const List* list) {
+extern "C" {
+#include "list.h"
+}
+
+#include "bench_helpers.h"
+
+void print_list(const List* list, int padding) {
   int i = 0;
   Link* head = list->head;
   while(head) {
-    printf("link (%d): %s\n", i, head->value);
+    char null[6] = "NULL";
+    char* ref_val = null;
+    if(head->ref) ref_val = head->ref->value;
+    printf("link (%0*d): %s, refs: (%s) \n", padding, i, head->value, ref_val);
     head = head->next;
     ++i;
   }
@@ -27,10 +36,18 @@ int main() {
   list_copy(&list, &copy);
 
   printf("original list:\n");
-  print_list(&list);
+  print_list(&list, 1);
 
   printf("copy list:\n");
-  print_list(&copy);
+  print_list(&copy, 1);
+
+  List bench = {};
+  add_links(&bench, 100);
+  assign_refs(&bench);
+  printf("bench list:\n");
+  print_list(&bench,2);
+
+  printf("RAND_MAX:%d\n",RAND_MAX);
 
   return 0;
 }

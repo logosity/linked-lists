@@ -6,8 +6,8 @@
 /*********************************************************************************/
 /*** internal function declarations ***/
 /*********************************************************************************/
-Link* create_link(Link**, const char*);
-Link** find_end(List*);
+static Link* create_link(Link**, const char*);
+static Link** find_end(List*);
 
 /*********************************************************************************/
 /*** public functions ***/
@@ -78,30 +78,26 @@ int list_copy(List* from, List* to) {
 /*********************************************************************************/
 /*** internal function definitions ***/
 /*********************************************************************************/
-Link* create_link(Link** dst, const char* value) {
-  *dst = (Link*) malloc(sizeof(Link));
+static Link* create_link(Link** dst, const char* value) {
+  *dst = (Link*) calloc(1,sizeof(Link));
   Link* buffer = *dst;
   if(buffer == NULL) {
     fprintf(stderr, "Unable to allocate memory for link.\n");
     return NULL;
   }
-  buffer->next = NULL;
-  buffer->ref = NULL;
 
-  buffer->value = malloc(strlen(value) + 1);
+  buffer->value = strdup(value);
   if(buffer->value == NULL) {
-    fprintf(stderr, "Unable to allocate memory for vallue.\n");
+    fprintf(stderr, "Unable to copy value.\n");
     free(buffer);
     buffer == NULL;
     return NULL;
   }
 
-  strcpy(buffer->value, value);
-
   return buffer;
 }
 
-Link** find_end(List* list) {
+static Link** find_end(List* list) {
   Link** result = &list->head;
   while(*result != NULL) {
     result = &((*result)->next);
