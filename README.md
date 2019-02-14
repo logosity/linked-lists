@@ -1,5 +1,40 @@
+# Linked-Lists implementation
+
+This repo contains the solution to a simple linked list problem that I was asked to solve a while back. I find it a nice example of showing how to implement a given algorithim in two different languages (in this case C and Python). It also is a cool example of a few other things:
+
+* Using C++ to test C (in order to take advantage of features in the excellent testing tool [Catch2](https://github.com/catchorg/Catch2).
+* Why C is still a good choice over C++ at times (in this case, when considering how to implement a correct&mdash;and idiomatic&mdash;C++ 11 version, I found myself considering ever deeper questions like: "Does this require move semantics?", "What operators should be overloaded/implemented?" And a host of other things that are overkill for such a small problem.
+* How a paradigm follows a language (i.e. the Python version is OO, while the C version is much more 'functional').
+* A simple CMake implementation I can refer to (I was just learning how to use it when this code was written, so it makes for a good basic example).
+* A simple example of using `entr` and `make` as a continuous testing implementation (in the python version)&mdash;something I really like because it's a language-indepdent way of providing such functionality to my projects.
+
+# Problem
+
+This is the original problem statement that the code in this repo is intended to solve:
+
+<blockquote>
+Solve this in python and C/C++. Correctness is the most important, effeciency is important but secondary.
+
+You have a linked list that contains both a string and a pointer (C++) or a reference (Python) to 
+a random element in the list.
+
+Let's say we have the following list:
+
+{{"Test1", ref=element_3}, {"Test2", ref=element_1}, {"Test3", ref=element_1}, {"Test4", ref=element_0}}
+
+Note: multiple randoms can point to the same element, it's not guaranteed to be 1:1
+
+What you need to do is make a deep copy of the list. The new list must be its own entity 
+(i.e. not simply reference the first list), and the randoms must follow through, so 
+if element 0's random references element 3, copy0's random reference must reference copy3.
+
+There's two different cases of optimization here: one is processing time; this is very easy to 
+solve in O(n^2), but harder to go more efficient. The other is memory: it's easy to use many temporary 
+variables, but harder to use less temporary memory.
+</blockquote>
+
 # Problem Solution
-This project contains two solutions to the problem statement (copied into `./problem.txt` from the email) on in Python and one in C. Both implement the same algorithm described as "Method 2" on this page:
+This project contains two solutions to the above-referenced problem statement&mdash;one in Python and one in C. Both implement the same algorithm described as "Method 2" on this page:
 https://www.tutorialcup.com/linked-list/clone-linked-list-next-random-pointer.htm
 
 The algorithm copies a linked list with random ref links in time O(n) and constant space.
@@ -37,7 +72,7 @@ A simple "main" is available to use the list, it can be run via `python main.py`
 
 ## C
 
-The C version (in the `./c` directory), is based on two simple structs and some helper functions (defined in `c/include/list.h`). and c  started off as a C++ version with 
+The C version (in the `./c` directory), is based on two simple structs and some helper functions (defined in `c/include/list.h`).
 
 ### Install Requirements
 
